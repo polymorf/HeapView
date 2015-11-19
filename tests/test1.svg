@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="1400" height="845" onload="init(evt)">
+<style>
+	.caption{
+		font-size: 14px;
+		font-family: Georgia, serif;
+	}
+	.tooltip{
+		font-size: 16px;
+		font-familly: monospace;
+	}
+	.tooltip_bg{
+		fill: white;
+		stroke: black;
+		stroke-width: 1;
+		opacity: 0.85;
+	}
+	svg {
+		padding: 5px;
+	}
+</style><script type="text/ecmascript">
+<![CDATA[
+
+function init(evt)
+{
+    if ( window.svgDocument == null )
+    {
+	svgDocument = evt.target.ownerDocument;
+    }
+    svg = document.querySelector('svg');
+    pt = svg.createSVGPoint();
+
+
+    tooltip = svgDocument.getElementById('tooltip');
+    tooltip_nobold = svgDocument.getElementById('tooltip-nobold');
+    tooltip_bold = svgDocument.getElementById('tooltip-bold');
+    tooltip_bg = svgDocument.getElementById('tooltip_bg');
+
+}
+
+function cursorPoint(evt){
+	pt.x = evt.clientX; pt.y = evt.clientY;
+	return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
+
+function ShowTooltip(evt, boldText, normalText)
+{
+	if (normalText != "") {
+		loc = cursorPoint(evt);
+	    tooltip.setAttributeNS(null,"x",loc.x+11);
+	    tooltip.setAttributeNS(null,"y",loc.y+27);
+	    tooltip_nobold.firstChild.data = normalText;
+	    tooltip_bold.firstChild.data = boldText;
+	    tooltip.setAttributeNS(null,"visibility","visible");
+	    tooltip.setAttributeNS(null,"visibility","visible");
+
+	    length = tooltip.getComputedTextLength();
+	    tooltip_bg.setAttributeNS(null,"width",length+8);
+	    tooltip_bg.setAttributeNS(null,"x",loc.x+8);
+	    tooltip_bg.setAttributeNS(null,"y",loc.y+14);
+	    tooltip_bg.setAttributeNS(null,"visibility","visibile");
+    }
+}
+
+function HideTooltip(evt)
+{
+    tooltip.setAttributeNS(null,"visibility","hidden");
+    tooltip_bg.setAttributeNS(null,"visibility","hidden");
+}
+
+]]>
+</script>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="0" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="15">malloc(248) = 0x1b5b010</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="20" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="105" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="120">malloc(248) = 0x1b5b110</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="125" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(190,193,117); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="125" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x100 (0xf8) (0x1b5b108 -> 0x1b5b208)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="210" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="225">malloc(120) = 0x1b5b210</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="230" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(190,193,117); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="230" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x100 (0xf8) (0x1b5b108 -> 0x1b5b208)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(202,168,72); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="200px" y="230" x="810" 
+	onmousemove="ShowTooltip(evt, '0x1b5b208', ' - 0x80 (0x78) (0x1b5b208 -> 0x1b5b288)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="315" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="330">free(0x1b5b110) = &lt;void&gt;</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="335" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	stroke-dasharray="5,5" 
+	style="stroke:black; stroke-width:1; fill:rgb(240,240,240); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="335" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x100 (0xf8) (0x1b5b108 -> 0x1b5b208)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(202,168,72); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="200px" y="335" x="810" 
+	onmousemove="ShowTooltip(evt, '0x1b5b208', ' - 0x80 (0x78) (0x1b5b208 -> 0x1b5b288)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="420" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="435">&lt;fn_overflow_loop+0x27&gt;</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="440" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	stroke-dasharray="5,5" 
+	style="stroke:black; stroke-width:1; fill:rgb(240,240,240); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="440" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x100 (0xf8) (0x1b5b108 -> 0x1b5b208)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(202,168,72); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="200px" y="440" x="810" 
+	onmousemove="ShowTooltip(evt, '0x1b5b208', ' - 0x80 (0x78) (0x1b5b208 -> 0x1b5b288)')"
+	onmouseout="HideTooltip(evt)"
+/>
+
+<g id="popup-group" transform="translate(411,444)">
+	<path d="M-60,-40L180,-40L180,-20L10,-20L0,-10L-10,-20L-60,-20L-60,-40" id="popup" stroke-linecap="square" style="stroke-width: 2px; stroke: rgb(128, 0, 0); fill: rgb(255,128,128); fill-opacity: 0.95; stroke-opacity: 1;"></path>
+	<text class="h2" text-anchor="middle" transform="translate(55, -25)" fill-opacity="1">overflow in next_chunk (1 byte) </text>
+</g>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,0,0); fill-opacity:1.000000;"
+	rx="2" ry="2" height="12px" width="389px" y="444" x="22" 
+	onmousemove="ShowTooltip(evt, '', 'fn_overflow_loop (0x1b5b010 -> 0x1b5b109)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="525" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="540">&lt;fn_overflow_single+0x1e&gt;</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="545" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	stroke-dasharray="5,5" 
+	style="stroke:black; stroke-width:1; fill:rgb(240,240,240); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="545" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x100 (0xf8) (0x1b5b108 -> 0x1b5b208)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(202,168,72); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="200px" y="545" x="810" 
+	onmousemove="ShowTooltip(evt, '0x1b5b208', ' - 0x80 (0x78) (0x1b5b208 -> 0x1b5b288)')"
+	onmouseout="HideTooltip(evt)"
+/>
+
+<g id="popup-group" transform="translate(411,549)">
+	<path d="M-60,-40L180,-40L180,-20L10,-20L0,-10L-10,-20L-60,-20L-60,-40" id="popup" stroke-linecap="square" style="stroke-width: 2px; stroke: rgb(128, 0, 0); fill: rgb(255,128,128); fill-opacity: 0.95; stroke-opacity: 1;"></path>
+	<text class="h2" text-anchor="middle" transform="translate(55, -25)" fill-opacity="1">overflow in next_chunk (1 byte) </text>
+</g>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,0,0); fill-opacity:1.000000;"
+	rx="2" ry="2" height="12px" width="4px" y="549" x="408" 
+	onmousemove="ShowTooltip(evt, '', 'fn_overflow_single (0x1b5b108 -> 0x1b5b109)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(255,255,255); fill-opacity:1.000000;"
+	rx="10" ry="10" height="100px" width="1010px" y="630" x="5" 
+	onmousemove="ShowTooltip(evt, '', '')"
+	onmouseout="HideTooltip(evt)"
+/>
+<text font-weight="bold" style="fill:rgb(0,0,0);" x="10" y="645">malloc(376) = 0x1b5b110</text>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(118,158,161); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="650" x="10" 
+	onmousemove="ShowTooltip(evt, '0x1b5b008', ' - 0x100 (0xf8) (0x1b5b008 -> 0x1b5b108)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	stroke-dasharray="5,5" 
+	style="stroke:black; stroke-width:1; fill:rgb(240,240,240); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="400px" y="650" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x100 (0xf8) (0x1b5b108 -> 0x1b5b208)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(202,168,72); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="200px" y="650" x="810" 
+	onmousemove="ShowTooltip(evt, '0x1b5b208', ' - 0x80 (0x78) (0x1b5b208 -> 0x1b5b288)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect 
+	style="stroke:black; stroke-width:1; fill:rgb(158,106,181); fill-opacity:1.000000;"
+	rx="5" ry="5" height="20px" width="600px" y="670" x="410" 
+	onmousemove="ShowTooltip(evt, '0x1b5b108', ' - 0x180 (0x178) (0x1b5b108 -> 0x1b5b288)')"
+	onmouseout="HideTooltip(evt)"
+/>
+<rect class="tooltip_bg" id="tooltip_bg" x="0" y="0" rx="4" ry="4" width="55" height="17" visibility="hidden"/>
+<text class="tooltip" id="tooltip" x="0" y="0" visibility="hidden"><tspan id="tooltip-bold" font-weight="bold">A</tspan><tspan id="tooltip-nobold">B</tspan></text>
+</svg>
