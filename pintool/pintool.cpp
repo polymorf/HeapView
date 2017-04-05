@@ -1,6 +1,7 @@
 #include "pin.H"
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <list>
@@ -21,174 +22,22 @@
 #define REALLOC "realloc"
 #endif
 
+
+#define CHUNK_SIZE_ALIGN 0x20
 using namespace std;
 
-
-/*
- * GLOBALS
- */
-
-// forward declaration
-class chunklist_t;
-
-/*
- * housekeeping classes
- */
-class chunk_t {
-public:
-    chunk_t(unsigned long address, unsigned long size)
-        : mAddress(address), mSize(size)
-    {};
-    chunk_t(const chunk_t &chunk)
-        : mAddress(chunk.mAddress), mSize(chunk.mSize)
-    {};
-    chunk_t(const chunk_t *chunk)
-        : mAddress(chunk->mAddress), mSize(chunk->mSize)
-    {};
-    ~chunk_t() {};
-
-    bool contains(unsigned long addr) {
-        if (addr >= mAddress && addr <= (mAddress+mSize))
-            return true;
-        return false;
-    }
-
-    bool operator< (chunk_t *rhs) {
-        return mAddress < rhs->mAddress;
-    }
-    bool operator< (const chunk_t &rhs) {
-        return mAddress < rhs.mAddress;
-    };
-    bool operator< (const unsigned long address) {
-        return mAddress < address;
-    }
-
-    const unsigned long address() { return mAddress; };
-    const unsigned long size() { return mSize; };
-
-private:
-    unsigned long   mAddress;
-    unsigned long   mSize;
-};
-
-
-class chunklist_t {
-public:
-    chunklist_t() 
-        : mInserts(0), mRemoves(0)
-    {};
-    ~chunklist_t() {};
-
-    void insert(unsigned long address, unsigned long size);
-    void remove(unsigned long address);
-    bool contains(unsigned long address);
-    bool has_address(unsigned long address);
-    bool in_range(unsigned long address);
-
-    void set_ntdll(unsigned long low, unsigned long high) {
-        mNTDLL_low = low; mNTDLL_high =high;
-    };
-    bool is_ntdll(unsigned long address) {
-        if (address >= mNTDLL_low && address <= mNTDLL_high)
-            return true;
-        return false;
-    };
-
-    list<chunk_t>::iterator    begin() {return mChunks.begin(); };
-    list<chunk_t>::iterator    end() {return mChunks.end(); };
-    unsigned int size() const { return mChunks.size(); }
-
-    unsigned long ntdll_low() const { return mNTDLL_low; }
-    unsigned long ntdll_high() const { return mNTDLL_high; }
-
-private:
-    list<chunk_t>  mChunks;
-    unsigned int        mInserts;
-    unsigned int        mRemoves;
-    unsigned long       mNTDLL_low;
-    unsigned long       mNTDLL_high;
-};
-
-
-
-/* 
- * GLOBALS (again)
- */
-chunklist_t  ChunksList;
-
-void
-chunklist_t::insert(unsigned long address, unsigned long size)
-{
-    size = size + 8 + (0x10-1);
-    size = size - (size%0x10);
-    chunk_t chunk(address, size);
-    list<chunk_t>::iterator    low;
-
-    low = lower_bound(mChunks.begin(), mChunks.end(), chunk);
-
-    mChunks.insert(low, chunk);
-}
-
-void
-chunklist_t::remove(unsigned long address)
-{
-    list<chunk_t>::iterator    low;
-
-    low = lower_bound(mChunks.begin(), mChunks.end(), address);
-
-    if (low != mChunks.end() && (*low).address() == address)
-        mChunks.erase(low);
-}
-
-
-// address is in a chunk range
-bool
-chunklist_t::contains(unsigned long address)
-{
-    list<chunk_t>::iterator    low;
-
-    low = lower_bound(mChunks.begin(), mChunks.end(), address);
-
-    if (low != mChunks.end() && ((*low).contains(address)))
-        return true;
-
-    low--; // preceding chunk ? 
-    if (low != mChunks.end() && (*low).contains(address))
-        return true;
-    return false;
-}
-
-// has the exact address
-bool
-chunklist_t::has_address(unsigned long address)
-{
-    list<chunk_t>::iterator    low;
-
-    low = lower_bound(mChunks.begin(), mChunks.end(), address);
-
-    if (low != mChunks.end() && ((*low).address() == address))
-        return true;
-    return false;
-}
-
-bool
-chunklist_t::in_range(unsigned long address)
-{
-    if (address >= mChunks.front().address() && 
-        address <= (mChunks.back().address() + mChunks.back().size()))
-        return true;
-    return false;
-}
 
 /* ===================================================================== */
 /* Global Variables */
 /* ===================================================================== */
 
 class Args;
+class Bounds;
 
 ofstream TraceFile;
 
 Args* args = NULL;
+Bounds* bounds = NULL;
 
 string ADDRINTToHexString(ADDRINT a)
 {
@@ -205,6 +54,7 @@ public:
     ADDRINT addr;
     ADDRINT num;
     ADDRINT size;
+    ADDRINT retaddr;
 };
 
 Args::Args()
@@ -217,23 +67,72 @@ Args::~Args()
 
 }
 
+class Bounds
+{
+public:
+    Bounds();
+    ~Bounds();
+    ADDRINT start;
+    ADDRINT end;
+};
+
+Bounds::Bounds()
+{
+    end=0;
+    start=~end;
+}
+
+Bounds::~Bounds()
+{
+
+}
+
 /* ===================================================================== */
 /* Analysis routines                                                     */
 /* ===================================================================== */
 
-VOID BeforeMalloc(ADDRINT size)
+bool is_ld_linux(ADDRINT addr) {
+    PIN_LockClient();
+    IMG img = IMG_FindByAddress(addr);
+    PIN_UnlockClient();
+    if (IMG_Valid(img)){
+        // todo handle 32 bit and different paths
+        if (!IMG_Name(img).compare(0,16,"/lib64/ld-linux-")) {
+            return true;
+        }
+    }
+    return false;
+}
+
+VOID BeforeMalloc(ADDRINT size, ADDRINT return_ip)
 {
     args->size = size;
+    args->retaddr = return_ip;
 }
 
 VOID AfterMalloc(ADDRINT ret)
 {
+    if (is_ld_linux(args->retaddr)) {
+        return;
+    }
+    ADDRINT real_alloc_size = args->size;
+    if (real_alloc_size % CHUNK_SIZE_ALIGN != 0) {
+        real_alloc_size += CHUNK_SIZE_ALIGN - (real_alloc_size % CHUNK_SIZE_ALIGN);
+    }
+    if(bounds->start > ret) {
+        bounds->start = ret - 8;
+    } 
+    if(bounds->end < (ret + real_alloc_size)) {
+        bounds->end = (ret + real_alloc_size);
+    }
     TraceFile << "malloc(" << args->size << ") = " << ADDRINTToHexString(ret) << endl;
-    ChunksList.insert((unsigned long) ret-8, args->size);
 }
 
-VOID Free(ADDRINT addr)
+VOID Free(ADDRINT addr, ADDRINT return_ip)
 {
+    if (is_ld_linux(return_ip)) {
+        return;
+    }
     string formatted_addr = "";
     if(addr == 0){
         formatted_addr = "0";
@@ -241,28 +140,56 @@ VOID Free(ADDRINT addr)
         formatted_addr = ADDRINTToHexString(addr);
     }
     TraceFile << "free(" + formatted_addr +") = <void>" << endl;
-    ChunksList.remove((unsigned long)addr-8);
 }
 
-VOID BeforeCalloc(ADDRINT num, ADDRINT size)
+VOID BeforeCalloc(ADDRINT num, ADDRINT size, ADDRINT return_ip)
 {
     args->num = num;
     args->size = size;
+    args->retaddr = return_ip;
 }
 
 VOID AfterCalloc(ADDRINT ret)
 {
+    if (is_ld_linux(args->retaddr)) {
+        return;
+    }
+    ADDRINT real_alloc_size = args->size * args->num;
+    if (real_alloc_size % CHUNK_SIZE_ALIGN != 0) {
+        real_alloc_size += CHUNK_SIZE_ALIGN - (real_alloc_size % CHUNK_SIZE_ALIGN);
+    }
+    if(bounds->start > ret) {
+        bounds->start = ret - 8;
+    } 
+    if(bounds->end < (ret + real_alloc_size)) {
+        bounds->end = (ret + real_alloc_size);
+    }
     TraceFile << "calloc(" << args->num << "," << ADDRINTToHexString(args->size) +") = " + ADDRINTToHexString(ret) << endl;
 }
 
-VOID BeforeRealloc(ADDRINT addr, ADDRINT size)
+VOID BeforeRealloc(ADDRINT addr, ADDRINT size, ADDRINT return_ip)
 {
     args->addr = addr;
     args->size = size;
+    args->retaddr = return_ip;
 }
 
 VOID AfterRealloc(ADDRINT ret)
 {
+    if (is_ld_linux(args->retaddr)) {
+        return;
+    }
+    ADDRINT real_alloc_size = args->size;
+    if (real_alloc_size % CHUNK_SIZE_ALIGN != 0) {
+        real_alloc_size += CHUNK_SIZE_ALIGN - (real_alloc_size % CHUNK_SIZE_ALIGN);
+    }
+    if(bounds->start > ret) {
+        bounds->start = ret - 8;
+    } 
+    if(bounds->end < (ret + real_alloc_size)) {
+        bounds->end = (ret + real_alloc_size);
+    }
+    cout << "realloc(" << ADDRINTToHexString(args->addr) << "," << args->size << ") = " << ADDRINTToHexString(ret) << endl;
     TraceFile << "realloc(" << ADDRINTToHexString(args->addr) << "," << args->size << ") = " << ADDRINTToHexString(ret) << endl;
 }
 
@@ -286,7 +213,7 @@ VOID Image(IMG img, VOID *v)
 
         // Instrument malloc() to print the input argument value and the return value.
         RTN_InsertCall(mallocRtn, IPOINT_BEFORE, (AFUNPTR)BeforeMalloc,
-                       IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
+                       IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_RETURN_IP,
                        IARG_END);
         RTN_InsertCall(mallocRtn, IPOINT_AFTER, (AFUNPTR)AfterMalloc,
                        IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
@@ -301,7 +228,7 @@ VOID Image(IMG img, VOID *v)
         RTN_Open(freeRtn);
         // Instrument free() to print the input argument value.
         RTN_InsertCall(freeRtn, IPOINT_BEFORE, (AFUNPTR)Free,
-                       IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
+                       IARG_FUNCARG_ENTRYPOINT_VALUE, 0, IARG_RETURN_IP,
                        IARG_END);
 
         RTN_Close(freeRtn);
@@ -317,6 +244,7 @@ VOID Image(IMG img, VOID *v)
         RTN_InsertCall(callocRtn, IPOINT_BEFORE, (AFUNPTR)BeforeCalloc,
                        IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
                        IARG_FUNCARG_ENTRYPOINT_VALUE, 1,
+                       IARG_RETURN_IP,
                        IARG_END);
         RTN_InsertCall(callocRtn, IPOINT_AFTER, (AFUNPTR)AfterCalloc,
                        IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
@@ -333,6 +261,7 @@ VOID Image(IMG img, VOID *v)
         RTN_InsertCall(reallocRtn, IPOINT_BEFORE, (AFUNPTR)BeforeRealloc,
                        IARG_FUNCARG_ENTRYPOINT_VALUE, 0,
                        IARG_FUNCARG_ENTRYPOINT_VALUE, 1,
+                       IARG_RETURN_IP,
                        IARG_END);
         RTN_InsertCall(reallocRtn, IPOINT_AFTER, (AFUNPTR)AfterRealloc,
                        IARG_FUNCRET_EXITPOINT_VALUE, IARG_END);
@@ -342,7 +271,7 @@ VOID Image(IMG img, VOID *v)
 }
 
 VOID WriteMem(ADDRINT insAddr, string insDis, ADDRINT memOp, UINT32 size) {
-    if (ChunksList.contains(memOp)) {
+    if (memOp >= (bounds->start - CHUNK_SIZE_ALIGN) && memOp <= (bounds->end + CHUNK_SIZE_ALIGN) ) {
         PIN_LockClient();
         RTN rtn = RTN_FindByAddress(insAddr);
         PIN_UnlockClient();
@@ -417,6 +346,7 @@ int main(int argc, char *argv[])
     // Write to a file since TraceFile and cerr maybe closed by the application
     Args* initial = new Args();
     args = initial;
+    bounds = new Bounds();
     // Register Image to be called to instrument functions.
 
     IMG_AddInstrumentFunction(Image, 0);
