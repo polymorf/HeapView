@@ -7,4 +7,4 @@ Tool to view heap chunks and memory writes (using pintool)
 HeapView.py trace vuln.svg
 ```
 
-<img src="https://cdn.rawgit.com/polymorf/HeapView/master/tests/test1.svg">
+<img src="https://cdn.jsdelivr.net/gh/polymorf/HeapView/tests/test1.svg">
